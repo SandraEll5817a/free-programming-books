@@ -65,7 +65,11 @@ def check_link_format(lines: list[str], filename: str) -> list[str]:
 
 
 def check_alphabetical_order(lines: list[str], filename: str) -> list[str]:
-    """Check that entries within a section are in alphabetical order."""
+    """Check that entries within a section are in alphabetical order.
+
+    Note: comparison is case-insensitive, which handles mixed-case titles
+    like '(e)Book' or 'iOS' more gracefully.
+    """
     errors = []
     section_entries: list[tuple[int, str]] = []
 
@@ -85,60 +89,4 @@ def check_alphabetical_order(lines: list[str], filename: str) -> list[str]:
     for i, line in enumerate(lines, start=1):
         stripped = line.strip()
         if SECTION_HEADER_PATTERN.match(stripped):
-            if section_entries:
-                errors.extend(flush_section(section_entries))
-            section_entries = []
-        else:
-            match = LINK_PATTERN.match(stripped)
-            if match:
-                title = match.group(1)
-                section_entries.append((i, title))
-
-    if section_entries:
-        errors.extend(flush_section(section_entries))
-
-    return errors
-
-
-def lint_file(filepath: str) -> list[str]:
-    """Run all lint checks on a single file and return a list of error messages."""
-    path = Path(filepath)
-    if not path.exists():
-        return [f"ERROR: File not found: {filepath}"]
-    if path.suffix.lower() != '.md':
-        return [f"SKIP: Not a markdown file: {filepath}"]
-
-    lines = path.read_text(encoding='utf-8').splitlines(keepends=True)
-    errors: list[str] = []
-
-    errors.extend(check_trailing_whitespace(lines, filepath))
-    errors.extend(check_duplicate_links(lines, filepath))
-    errors.extend(check_link_format(lines, filepath))
-    errors.extend(check_alphabetical_order(lines, filepath))
-
-    return errors
-
-
-def main() -> int:
-    """Entry point. Returns exit code 0 if no errors, 1 otherwise."""
-    files = sys.argv[1:]
-    if not files:
-        print("Usage: fpb-lint.py <file.md> [file.md ...]")
-        return 1
-
-    all_errors: list[str] = []
-    for f in files:
-        all_errors.extend(lint_file(f))
-
-    if all_errors:
-        for error in all_errors:
-            print(error)
-        print(f"\n{len(all_errors)} issue(s) found.")
-        return 1
-
-    print("No issues found.")
-    return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+            if sect
